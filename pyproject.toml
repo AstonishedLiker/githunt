@@ -1,7 +1,7 @@
 [project]
 name = "githunt"
 version = "0.1.0"
-description = "The ultimate git OSINT tool"
+description = "Advanced git intelligence analysis engine "
 authors = [
     {name = "AstonishedLiker", email = "alexis.lecam@hexaliker.fr"}
 ]

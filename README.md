@@ -1,3 +1,3 @@
 # githunt
 
-The ultimate git OSINT tool
+Advanced git intelligence analysis engine
