@@ -252,7 +252,7 @@ def infer_countries(user, N: int, use_population_apriori: bool) -> list[dict]:
     out = []
 
     for result in results[:N]:
-        logger.info(
+        logger.debug(
             "Candidate {} {} prob {:.3%} match {:.2%} wake {:.2%} tzs {}",
             result.code,
             result.name,
