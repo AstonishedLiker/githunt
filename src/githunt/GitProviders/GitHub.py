@@ -111,7 +111,7 @@ def scan_repositories(user: User, repos_url: str, scan_forks: bool, personal_acc
             break
         page += 1
 
-def query_user(username: str, scan_forks: bool, scan_orgs: bool, personal_access_token: str) -> Optional[User]:
+def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_orgs: list[str], personal_access_token: str) -> Optional[User]:
     logger.debug("Querying user {}", username)
     user_info = http_json_get(f"https://api.github.com/users/{username}", personal_access_token)
     if user_info is None:
@@ -146,6 +146,9 @@ def query_user(username: str, scan_forks: bool, scan_orgs: bool, personal_access
     logger.debug("Scanning organizations..")
 
     for org_info in orgs_info:
+        if org_info["login"] in blacklisted_orgs:
+            logger.warning("Skipping scanning blacklisted organization {}", org_info["login"])
+            continue
         scan_repositories(user, org_info["repos_url"], scan_forks, personal_access_token)
 
     return user

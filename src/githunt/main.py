@@ -43,7 +43,12 @@ def main() -> None:
             logger.warning("For security reasons, please either delete it after use, or make it temporary.")
             logger.warning("")
 
-        user = github_query_user(args.username, args.scan_forks, args.scan_orgs, args.personal_access_token)
+        blacklisted_orgs_str: str = args.blacklisted_orgs
+        blacklisted_orgs = list(map(str.strip, blacklisted_orgs_str.split(",")))
+
+        logger.debug("Blacklisted organizations: {}", blacklisted_orgs)
+
+        user = github_query_user(args.username, args.scan_forks, args.scan_orgs, blacklisted_orgs, args.personal_access_token)
         if user is None:
             logger.critical("Could not query the GitHub user '{}' (user is None)", args.username)
             exit(1)
@@ -68,29 +73,31 @@ def main() -> None:
         len(user.repositories),
     )
 
-    inferred_countries = infer_countries(user, args.top_countries)
-    logger.success("Successfully inferred countries")
-    logger.info("Inferred countries:")
-    for country_info in inferred_countries:
-        logger.info("\t- {}: {:.1f}% chance", country_info["name"], country_info["probability"] * 100)
+    if args.infer_country:
+        inferred_countries = infer_countries(user, args.top_countries, args.use_population_apriori)
+        logger.success("Successfully inferred countries")
+        logger.info("Inferred countries:")
+        for country_info in inferred_countries:
+            logger.info("\t- {}: {:.1f}% chance (score {})", country_info["name"], country_info["probability"] * 100, country_info["score"])
 
-    ratio_interactions_per_day, average_bounds_per_day = infer_activity(user)
-    logger.success("Successfully inferred activity")
+    if args.infer_activity:
+        ratio_interactions_per_day, average_bounds_per_day = infer_activity(user)
+        logger.success("Successfully inferred activity")
 
-    sorted_ratio = {day: ratio_interactions_per_day[day] for day in DAY_ORDER if day in ratio_interactions_per_day}
-    sorted_bounds = {day: average_bounds_per_day[day] for day in DAY_ORDER if day in average_bounds_per_day}
+        sorted_ratio = {day: ratio_interactions_per_day[day] for day in DAY_ORDER if day in ratio_interactions_per_day}
+        sorted_bounds = {day: average_bounds_per_day[day] for day in DAY_ORDER if day in average_bounds_per_day}
 
-    logger.info("Activity repartition:")
-    for day, ratio in sorted_ratio.items():
-        logger.info("\t- {}: {:.1f}% of activity", day, ratio * 100)
+        logger.info("Activity repartition:")
+        for day, ratio in sorted_ratio.items():
+            logger.info("\t- {}: {:.1f}% of activity", day, ratio * 100)
 
-    logger.info("Average active hours:")
-    for day, bounds in sorted_bounds.items():
-        lower_bound_timedelta = timedelta(seconds=bounds[0])
-        upper_bound_timedelta = timedelta(seconds=bounds[1])
+        logger.info("Average active hours:")
+        for day, bounds in sorted_bounds.items():
+            lower_bound_timedelta = timedelta(seconds=bounds[0])
+            upper_bound_timedelta = timedelta(seconds=bounds[1])
 
-        midnight = datetime.min
-        lower_bound_time = (midnight + lower_bound_timedelta).time().strftime("%H:%M")
-        upper_bound_time = (midnight + upper_bound_timedelta).time().strftime("%H:%M")
+            midnight = datetime.min
+            lower_bound_time = (midnight + lower_bound_timedelta).time().strftime("%H:%M")
+            upper_bound_time = (midnight + upper_bound_timedelta).time().strftime("%H:%M")
 
-        logger.info("\t- {}: from {} to {}", day, lower_bound_time, upper_bound_time)
+            logger.info("\t- {}: from {} to {}", day, lower_bound_time, upper_bound_time)

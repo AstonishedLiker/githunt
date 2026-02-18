@@ -51,6 +51,12 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"--blacklisted-orgs",
+    default="",
+	help="Comma-separated list of blacklisted organizations"
+)
+
+parser.add_argument(
 	"--workers",
 	help="Workers count for visiting repository",
     type=int,
@@ -59,8 +65,15 @@ parser.add_argument(
 
 # Feature toggles
 parser.add_argument(
+	"--no-population-apriori",
+	dest="use_population_apriori",
+	action="store_false",
+	help="Disable country population as a signal for inference"
+)
+
+parser.add_argument(
 	"--no-country",
-	dest="country",
+	dest="infer_country",
 	action="store_false",
 	help="Disable country inference"
 )
@@ -88,6 +101,7 @@ parser.add_argument(
 
 parser.add_argument(
 	"--no-active-hours",
+    dest="infer_active_hours",
 	action="store_false",
 	help="Disables active hours inference"
 )
@@ -100,12 +114,14 @@ parser.add_argument(
 
 parser.add_argument(
 	"--communities",
+    dest="infer_communities",
 	action="store_true",
 	help="Run Louvain community detection"
 )
 
 parser.add_argument(
 	"--bot-detection",
+    dest="infer_bot_score",
 	action="store_true",
 	help="Detect automated/spam/follow-all behavior"
 )
