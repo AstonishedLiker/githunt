@@ -54,7 +54,7 @@ def names_equivalent_guess(a: str, b: str) -> bool:
     return False
 
 def expand_identities(repos: list[Repo], user: User, alias_based_inference: bool, repo_infos: list[RepositoryInformation]) -> None:
-    GITHUB_GENERATED_EMAIL_PATTERN = re.compile(rf"^(?!{user.id}\+)\d+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$")
+    GITHUB_GENERATED_EMAIL_PATTERN = re.compile(rf"^(?!{user.id}\+)\d+\+[A-Za-z0-9-\[\]]+@users\.noreply\.github\.com$")
 
     logger.debug("Starting global identity expansion")
 
