@@ -58,7 +58,7 @@ parser.add_argument(
 
 parser.add_argument(
 	"--workers",
-	help="Workers count for visiting repository",
+	help="Workers count for scanners",
     type=int,
     default=12
 )
