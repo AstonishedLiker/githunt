@@ -1,0 +1,28 @@
+[project]
+name = "githunt"
+version = "0.1.0"
+description = "The ultimate git OSINT tool"
+authors = [
+    {name = "AstonishedLiker", email = "alexis.lecam@hexaliker.fr"}
+]
+readme = "README.md"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "argparse (>=1.4.0,<2.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "loguru (>=0.7.3,<0.8.0)",
+    "gitpython (>=3.1.46,<4.0.0)",
+    "pytz (>=2025.2,<2026.0)",
+    "countryinfo (>=0.1.2,<0.2.0)",
+    "countryflag (>=1.1.1,<2.0.0)",
+]
+
+[tool.poetry.scripts]
+githunt = "githunt.main:main"
+
+[tool.poetry]
+packages = [{include = "githunt", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
