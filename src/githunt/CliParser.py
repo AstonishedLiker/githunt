@@ -100,10 +100,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--no-active-hours",
-    dest="infer_active_hours",
+	"--no-activity",
+    dest="infer_activity",
 	action="store_false",
-	help="Disables active hours inference"
+	help="Disables activity inference"
 )
 
 parser.add_argument(
