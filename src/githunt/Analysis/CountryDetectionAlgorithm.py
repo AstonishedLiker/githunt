@@ -17,8 +17,8 @@ def timezones_matching_offset(dt_utc: datetime, offset: timedelta) -> set[str]:
             dt_local = dt_utc.astimezone(tz)
             if dt_local.utcoffset() == offset:
                 matches.add(tz_name)
-        except Exception as e:
-            logger.trace("Zone '{}' failed: {}", tz_name, e)
+        except:
+            logger.exception("Zone '{}' failed.", tz_name)
 
     logger.trace(
         "Offset {} at UTC {} matched {} timezones",
