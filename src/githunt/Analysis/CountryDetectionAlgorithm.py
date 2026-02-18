@@ -41,23 +41,23 @@ def infer_countries(user: User, N: int) -> list[dict]:
 
     country_counter: dict[str, int] = {}
 
-    for ts in timestamps:
-        if ts.tzinfo is None:
-            logger.warning("Naive timestamp detected: {}, assuming UTC", ts)
-            ts = ts.replace(tzinfo=timezone.utc)
+    for timestamp in timestamps:
+        if timestamp.tzinfo is None:
+            logger.warning("Naive timestamp detected: {}, assuming UTC", timestamp)
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
 
-        offset = ts.utcoffset()
+        offset = timestamp.utcoffset()
         if offset is None:
-            logger.warning("Timestamp {} has no offset, skipping", ts)
+            logger.warning("Timestamp {} has no offset, skipping", timestamp)
             continue
 
-        ts_utc = ts.astimezone(timezone.utc)
+        ts_utc = timestamp.astimezone(timezone.utc)
         tz_candidates = timezones_matching_offset(ts_utc, offset)
 
         if not tz_candidates:
             logger.trace(
                 "No timezone candidates for timestamp {} (offset {})",
-                ts,
+                timestamp,
                 offset,
             )
             continue
@@ -74,7 +74,7 @@ def infer_countries(user: User, N: int) -> list[dict]:
         if not matched_any:
             logger.trace(
                 "No country matched timezone candidates for timestamp {}",
-                ts,
+                timestamp,
             )
 
     if not country_counter:
