@@ -84,8 +84,14 @@ def main() -> None:
         inferred_countries = infer_countries(user, args.top_countries, args.use_population_apriori)
         logger.success("Successfully inferred countries")
         logger.info("Inferred countries:")
-        for country_info in inferred_countries:
-            logger.info("\t- {}: {:.1f}% chance (score {})", country_info["name"], country_info["probability"] * 100, country_info["score"])
+        for position, country_info in enumerate(inferred_countries):
+            logger.info(
+                "\t- {}) {} (chance: {:.1f}% locally,  {:.1f}% globally)",
+                position + 1,
+                country_info["name"],
+                country_info["local_probability"] * 100,
+                country_info["global_probability"] * 100
+            )
 
     if args.infer_activity:
         ratio_interactions_per_day, average_bounds_per_day = infer_activity(user)

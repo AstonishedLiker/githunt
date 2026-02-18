@@ -241,7 +241,7 @@ def infer_countries(user, N: int, use_population_apriori: bool) -> list[dict]:
             code=candidate,
             name=name,
             flag=flag, # pyright: ignore[reportArgumentType]
-            score=stats["adjusted_score"],
+            score=stats["adjusted_score"] / 100,
             probability=stats["probability"],
             match_fraction=stats["match_fraction"],
             wake_fraction=stats["wake_fraction"],
@@ -265,8 +265,8 @@ def infer_countries(user, N: int, use_population_apriori: bool) -> list[dict]:
         out.append({
             "code": result.code,
             "name": f"{result.flag}  {result.name}",
-            "probability": result.probability,
-            "score": result.score,
+            "global_probability": result.probability,
+            "local_probability": result.score,
             "match_fraction": result.match_fraction,
             "wake_fraction": result.wake_fraction,
             "tz_count": result.tz_count,
