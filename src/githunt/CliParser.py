@@ -60,7 +60,7 @@ parser.add_argument(
 	"--workers",
 	help="Workers count for visiting repository",
     type=int,
-    default=7
+    default=12
 )
 
 # Feature toggles
