@@ -96,7 +96,7 @@ parser.add_argument(
 	"--no-cross-check",
 	dest="cross_check",
 	action="store_false",
-	help="Disable metadata cross-checking"
+	help="Disable metadata cross-checking (NOT IMPLEMENTED)"
 )
 
 parser.add_argument(
@@ -116,14 +116,14 @@ parser.add_argument(
 	"--communities",
     dest="infer_communities",
 	action="store_true",
-	help="Run Louvain community detection"
+	help="Run Louvain community detection (NOT IMPLEMENTED)"
 )
 
 parser.add_argument(
 	"--bot-detection",
     dest="infer_bot_score",
 	action="store_true",
-	help="Detect automated/spam/follow-all behavior"
+	help="Detect automated/spam/follow-all behavior (NOT IMPLEMENTED)"
 )
 
 parser.set_defaults(
