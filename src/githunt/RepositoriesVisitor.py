@@ -6,6 +6,7 @@ from git import Repo
 
 import subprocess
 import shutil
+import re
 import os
 
 from githunt.Utils import random_str
@@ -53,6 +54,8 @@ def names_equivalent_guess(a: str, b: str) -> bool:
     return False
 
 def expand_identities(repos: list[Repo], user: User, alias_based_inference: bool, repo_infos: list[RepositoryInformation]) -> None:
+    GITHUB_GENERATED_EMAIL_PATTERN = re.compile(rf"^(?!{user.id}\+)\d+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$")
+
     logger.debug("Starting global identity expansion")
 
     changed = True
@@ -102,7 +105,13 @@ def expand_identities(repos: list[Repo], user: User, alias_based_inference: bool
                         user.git_data.timestamps.append(timestamp)
 
                     # Email discovery
-                    if (matching_strict_name) and (author_email not in user.git_data.emails):
+                    is_github_generated = GITHUB_GENERATED_EMAIL_PATTERN.match(author_email)
+                    is_userowned_github_generated_email = False
+                    if is_github_generated:
+                        email_id_part = author_email.split('+')[0]
+                        is_userowned_github_generated_email = (email_id_part == str(user.id))
+
+                    if (matching_strict_name) and (author_email not in user.git_data.emails) and ((not is_github_generated) or is_userowned_github_generated_email):
                         logger.debug("[{}] Discovered email '{}' (matched {})", repo_info.name, author_email, author_name)
                         user.git_data.emails.add(author_email)
                         changed = True

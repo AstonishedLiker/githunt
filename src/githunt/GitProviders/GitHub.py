@@ -4,6 +4,7 @@
 This file hosts the necessary code to retrieve user information from the git host GitHub.
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 from loguru import logger
 
@@ -64,54 +65,57 @@ def http_json_get(url: str, pat: Optional[str]):
             )
             return None
 
-def scan_repositories(user: User, repos_url: str, scan_forks: bool, personal_access_token: str) -> None:
+def scan_repositories(user: User, repos_url: str, scan_forks: bool, personal_access_token: str, workers: int) -> None:
     page = 1
-    while True:
-        # The API is paginated.
-        repos_url = f'{repos_url}?per_page=100&page={page}&type=owner'
-        repos_list = http_json_get(repos_url, personal_access_token)
-        if repos_list is None:
-            logger.debug("repos_list is None")
-            return
-
-        for repo_basic_info in repos_list:
-            if (not scan_forks) and repo_basic_info["fork"]:
-                logger.warning(
-                    "Skipping the scan of the fork '{}' (use '--scan-forks' to scan forks)",
-                    repo_basic_info["full_name"]
-                )
-                continue
-
-            logger.debug("Scanning repository '{}'", repo_basic_info["full_name"])
-
-            repo_full_info = http_json_get(repo_basic_info["url"], personal_access_token)
-            if repo_full_info is None:
-                logger.debug("repo_full_info is None")
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        while True:
+            repos_list = http_json_get(f'{repos_url}?per_page=100&page={page}&type=owner', personal_access_token)
+            if repos_list is None:
+                logger.debug("repos_list is None")
                 return
 
-            repo = RepositoryInformation(
-                repo_basic_info["full_name"],
-                repo_basic_info.get("description"),
-                repo_full_info["homepage"] if repo_full_info["homepage"] != "" else None,
-                repo_full_info["stargazers_count"],
-                repo_full_info["forks_count"],
-                repo_full_info["watchers_count"],
-                repo_full_info["clone_url"]
-            )
+            repo_futures = []
+            for repo_basic_info in repos_list:
+                if (not scan_forks) and repo_basic_info["fork"]:
+                    logger.warning(
+                        "Skipping the scan of the fork '{}' (use '--scan-forks' to scan forks)",
+                        repo_basic_info["full_name"]
+                    )
+                    continue
 
-            user.repositories.append(repo)
-            logger.trace(repo.__dict__)
-            logger.info(
-                "Added repository '{}' with {} stargazers to list",
-                repo.name,
-                repo.stars
-            )
+                logger.debug("Scanning repository '{}'", repo_basic_info["full_name"])
+                future = executor.submit(http_json_get, repo_basic_info["url"], personal_access_token)
+                repo_futures.append((repo_basic_info, future))
 
-        if len(repos_list) < 100:
-            break
-        page += 1
+            for repo_basic_info, future in repo_futures:
+                repo_full_info = future.result()
+                if repo_full_info is None:
+                    logger.debug("repo_full_info is None")
+                    continue
 
-def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_orgs: list[str], personal_access_token: str) -> Optional[User]:
+                repo = RepositoryInformation(
+                    repo_basic_info["full_name"],
+                    repo_basic_info.get("description"),
+                    repo_full_info["homepage"] if repo_full_info["homepage"] != "" else None,
+                    repo_full_info["stargazers_count"],
+                    repo_full_info["forks_count"],
+                    repo_full_info["watchers_count"],
+                    repo_full_info["clone_url"]
+                )
+
+                user.repositories.append(repo)
+                logger.trace(repo.__dict__)
+                logger.info(
+                    "Added repository '{}' with {} stargazers to list",
+                    repo.name,
+                    repo.stars
+                )
+
+            if len(repos_list) < 100:
+                break
+            page += 1
+
+def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_orgs: list[str], personal_access_token: str, workers: int) -> Optional[User]:
     logger.debug("Querying user {}", username)
     user_info = http_json_get(f"https://api.github.com/users/{username}", personal_access_token)
     if user_info is None:
@@ -120,7 +124,7 @@ def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_org
 
     user = User(
         user_info["id"],
-        user_info["login"], # corrected username (if needed)
+        user_info["login"], # Has the corrected username, so we use that instead of `username`
         user_info["name"],
         user_info.get("bio"),
         user_info.get("location"),
@@ -132,7 +136,7 @@ def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_org
     )
     logger.trace(user.__dict__)
 
-    scan_repositories(user, user_info["repos_url"], scan_forks, personal_access_token)
+    scan_repositories(user, user_info["repos_url"], scan_forks, personal_access_token, workers)
     if not scan_orgs:
         logger.warning("Not scanning organizations (as requested with '--no-scan-orgs')")
         return user
@@ -145,10 +149,16 @@ def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_org
 
     logger.debug("Scanning organizations..")
 
-    for org_info in orgs_info:
-        if org_info["login"] in blacklisted_orgs:
-            logger.warning("Skipping scanning blacklisted organization {}", org_info["login"])
-            continue
-        scan_repositories(user, org_info["repos_url"], scan_forks, personal_access_token)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = []
+        for org_info in orgs_info:
+            if org_info["login"] in blacklisted_orgs:
+                logger.warning("Skipping scanning blacklisted organization {}", org_info["login"])
+                continue
+            futures.append(executor.submit(scan_repositories, user, org_info["repos_url"], scan_forks, personal_access_token, workers))
+
+        for future in futures:
+            future.result()
 
     return user
+

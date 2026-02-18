@@ -48,7 +48,14 @@ def main() -> None:
 
         logger.debug("Blacklisted organizations: {}", blacklisted_orgs)
 
-        user = github_query_user(args.username, args.scan_forks, args.scan_orgs, blacklisted_orgs, args.personal_access_token)
+        user = github_query_user(
+            args.username,
+            args.scan_forks,
+            args.scan_orgs,
+            blacklisted_orgs,
+            args.personal_access_token,
+            args.workers
+        )
         if user is None:
             logger.critical("Could not query the GitHub user '{}' (user is None)", args.username)
             exit(1)
