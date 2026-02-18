@@ -199,7 +199,7 @@ def infer_countries(user, N: int, use_population_apriori: bool) -> list[dict]:
             "adjusted_score": adjusted_score,
         }
 
-        logger.debug(
+        logger.trace(
             "Country {}, stats match_frac {:.3f}, wake_frac {:.3f}, tz_count {}, raw {:.6f}, adjusted {:.6f}",
             candidate,
             match_fraction,
