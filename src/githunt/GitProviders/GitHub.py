@@ -125,7 +125,7 @@ def query_user(username: str, scan_forks: bool, scan_orgs: bool, blacklisted_org
     user = User(
         user_info["id"],
         user_info["login"], # Has the corrected username, so we use that instead of `username`
-        user_info["name"],
+        user_info["name"] or user_info["login"],
         user_info.get("bio"),
         user_info.get("location"),
         user_info.get("blog"),
